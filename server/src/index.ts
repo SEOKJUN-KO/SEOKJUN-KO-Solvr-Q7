@@ -4,6 +4,7 @@ import env from './config/env'
 import { initializeDatabase, getDb } from './db'
 import runMigration from './db/migrate'
 import { createUserService } from './services/userService'
+import { createDashboardService } from './services/dashboardService'
 import { createRoutes } from './routes'
 import { AppContext } from './types/context'
 
@@ -38,7 +39,8 @@ async function start() {
     // 서비스 및 컨텍스트 초기화
     const db = await getDb()
     const context: AppContext = {
-      userService: createUserService({ db })
+      userService: createUserService({ db }),
+      dashboardService: createDashboardService()
     }
 
     // 라우트 등록
