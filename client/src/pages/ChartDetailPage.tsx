@@ -5,6 +5,7 @@ import ChartView from '../components/ChartView'
 type ChartData = {
   id: string
   title: string
+  description: string
   type: 'bar' | 'line' | 'pie'
   data: any
 }
@@ -22,9 +23,12 @@ export default function ChartDetailPage() {
   if (!chart) return <div>로딩 중...</div>
 
   return (
-    <div>
-      <h2>{chart.title}</h2>
-      <ChartView chart={chart} />
+    <div className="max-w-3xl mx-auto p-6 space-y-4">
+      <h2 className="text-2xl font-bold">{chart.title}</h2>
+      <div className="card p-4">
+        <ChartView chart={chart} />
+      </div>
+      <p className="text-neutral-700">{chart.description}</p>
     </div>
   )
-} 
+}

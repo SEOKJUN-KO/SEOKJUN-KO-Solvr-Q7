@@ -1,12 +1,32 @@
 import { Bar, Line, Pie } from 'react-chartjs-2'
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend } from 'chart.js'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js'
 import { FC } from 'react'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Tooltip,
+  Legend
+)
 
 type ChartData = {
   id: string
   title: string
+  description: string
   type: 'bar' | 'line' | 'pie'
   data: any
 }
@@ -18,4 +38,4 @@ const ChartView: FC<{ chart: ChartData }> = ({ chart }) => {
   return null
 }
 
-export default ChartView 
+export default ChartView

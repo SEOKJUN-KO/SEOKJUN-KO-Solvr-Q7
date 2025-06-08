@@ -17,15 +17,19 @@ export default function MainPage() {
   }, [])
 
   return (
-    <div>
-      <h1>대시보드 차트 목록</h1>
-      <ul>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">대시보드 차트 목록</h1>
+      <ul className="grid gap-4 md:grid-cols-2">
         {charts.map(chart => (
-          <li key={chart.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/charts/${chart.id}`)}>
-            {chart.title}
+          <li
+            key={chart.id}
+            className="card cursor-pointer hover:bg-primary-50"
+            onClick={() => navigate(`/charts/${chart.id}`)}
+          >
+            <h2 className="font-semibold">{chart.title}</h2>
           </li>
         ))}
       </ul>
     </div>
   )
-} 
+}
