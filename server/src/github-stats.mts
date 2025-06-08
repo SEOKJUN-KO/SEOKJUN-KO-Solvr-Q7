@@ -113,6 +113,24 @@ interface PackageStats {
   lastYearReleases: number;
 }
 
+interface RawRelease {
+  repository: string;
+  release_id: number;
+  release_tag: string;
+  release_name: string | null;
+  release_notes: string | null | undefined;
+  release_url: string;
+  is_draft: boolean;
+  is_prerelease: boolean;
+  created_at: string;
+  published_at: string | null;
+  author_name: string | null;
+  author_url: string | null;
+  target_branch: string;
+  download_count: number;
+  asset_count: number;
+}
+
 const octokit = new Octokit({
   auth: env.GITHUB_TOKEN
 });
@@ -256,9 +274,28 @@ async function generateStats() {
 
   const allStats: ReleaseStats[] = [];
   const allPackageStats: PackageStats[] = [];
+  const allRawReleases: RawRelease[] = [];
 
   for (const { owner, repo } of repositories) {
     const releases = await getAllReleases(owner, repo);
+    allRawReleases.push(...releases.map(release => ({
+      repository: `${owner}/${repo}`,
+      release_id: release.id,
+      release_tag: release.tag_name,
+      release_name: release.name,
+      release_notes: release.body,
+      release_url: release.html_url,
+      is_draft: release.draft,
+      is_prerelease: release.prerelease,
+      created_at: release.created_at,
+      published_at: release.published_at,
+      author_name: release.author?.login ?? null,
+      author_url: release.author?.html_url ?? null,
+      target_branch: release.target_commitish,
+      download_count: release.assets.reduce((sum, asset) => sum + asset.download_count, 0),
+      asset_count: release.assets.length
+    })));
+    
     const stats = calculateStats(releases);
     stats.repository = `${owner}/${repo}`;
     allStats.push(stats);
@@ -266,6 +303,28 @@ async function generateStats() {
     const packageStats = analyzePackageReleases(releases);
     allPackageStats.push(...packageStats);
   }
+
+  // 원본 릴리즈 데이터 CSV
+  const rawReleasesWriter = createObjectCsvWriter({
+    path: 'data/raw-releases.csv',
+    header: [
+      { id: 'repository', title: '저장소' },
+      { id: 'release_id', title: '릴리즈 ID' },
+      { id: 'release_tag', title: '릴리즈 태그' },
+      { id: 'release_name', title: '릴리즈 이름' },
+      { id: 'release_notes', title: '릴리즈 노트' },
+      { id: 'release_url', title: '릴리즈 페이지 URL' },
+      { id: 'is_draft', title: '초안 여부' },
+      { id: 'is_prerelease', title: '프리릴리즈 여부' },
+      { id: 'created_at', title: '생성일시' },
+      { id: 'published_at', title: '발행일시' },
+      { id: 'author_name', title: '작성자 이름' },
+      { id: 'author_url', title: '작성자 프로필 URL' },
+      { id: 'target_branch', title: '대상 브랜치' },
+      { id: 'download_count', title: '다운로드 수' },
+      { id: 'asset_count', title: '에셋 수' }
+    ]
+  });
 
   // 전체 릴리즈 통계 CSV (팀 모니터링 중심 구조)
   const releaseStatsWriter = createObjectCsvWriter({
@@ -318,6 +377,7 @@ async function generateStats() {
     ]
   });
 
+  await rawReleasesWriter.writeRecords(allRawReleases);
   await releaseStatsWriter.writeRecords(allStats);
   await packageStatsWriter.writeRecords(allPackageStats);
   console.log('CSV files have been written successfully');
