@@ -149,33 +149,40 @@ async function generateStats() {
   const allPackageStats: PackageStats[] = [];
   const allRawReleases: RawRelease[] = [];
 
-  for (const { owner, repo } of repositories) {
-    const releases = await getAllReleases(owner, repo);
-    allRawReleases.push(...releases.map(release => ({
-      repository: `${owner}/${repo}`,
-      release_id: release.id,
-      release_tag: release.tag_name,
-      release_name: release.name,
-      release_notes: release.body || null,
-      release_url: release.html_url,
-      is_draft: release.draft,
-      is_prerelease: release.prerelease,
-      created_at: release.created_at,
-      published_at: release.published_at,
-      author_name: release.author?.login || null,
-      author_url: release.author?.html_url || null,
-      target_branch: release.target_commitish,
-      download_count: release.assets.reduce((sum, asset) => sum + asset.download_count, 0),
-      asset_count: release.assets.length
-    })));
-    
-    const stats = calculateStats(releases);
-    stats.repository = `${owner}/${repo}`;
-    allStats.push(stats);
+  await Promise.all(
+    repositories.map(async ({ owner, repo }) => {
+      const releases = await getAllReleases(owner, repo);
+      allRawReleases.push(
+        ...releases.map(release => ({
+          repository: `${owner}/${repo}`,
+          release_id: release.id,
+          release_tag: release.tag_name,
+          release_name: release.name,
+          release_notes: release.body || null,
+          release_url: release.html_url,
+          is_draft: release.draft,
+          is_prerelease: release.prerelease,
+          created_at: release.created_at,
+          published_at: release.published_at,
+          author_name: release.author?.login || null,
+          author_url: release.author?.html_url || null,
+          target_branch: release.target_commitish,
+          download_count: release.assets.reduce(
+            (sum, asset) => sum + asset.download_count,
+            0
+          ),
+          asset_count: release.assets.length
+        })
+      );
 
-    const packageStats = analyzePackageReleases(releases);
-    allPackageStats.push(...packageStats);
-  }
+      const stats = calculateStats(releases);
+      stats.repository = `${owner}/${repo}`;
+      allStats.push(stats);
+
+      const packageStats = analyzePackageReleases(releases);
+      allPackageStats.push(...packageStats);
+    })
+  );
 
   // 원본 릴리즈 데이터 CSV
   const rawReleasesWriter = createObjectCsvWriter({

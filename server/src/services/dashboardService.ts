@@ -31,21 +31,21 @@ export function createDashboardService(): DashboardService {
   let releaseStats: CSVData | null = null
   let rawReleases: CSVData | null = null
 
-  const loadData = () => {
+  const loadData = async () => {
     if (!packageStats) {
-      packageStats = readCSV('data/package-stats.csv')
+      packageStats = await readCSV('data/package-stats.csv')
     }
     if (!releaseStats) {
-      releaseStats = readCSV('data/release-stats.csv')
+      releaseStats = await readCSV('data/release-stats.csv')
     }
     if (!rawReleases) {
-      rawReleases = readCSV('data/raw-releases.csv')
+      rawReleases = await readCSV('data/raw-releases.csv')
     }
     return { packageStats, releaseStats, rawReleases }
   }
 
-  const createPackageReleaseChart = (): ChartData => {
-    const { packageStats } = loadData()
+  const createPackageReleaseChart = async (): Promise<ChartData> => {
+    const { packageStats } = await loadData()
     const data = packageStats
       .sort((a, b) => Number(b['총 릴리즈 수']) - Number(a['총 릴리즈 수']))
       .slice(0, 10)
@@ -75,8 +75,8 @@ export function createDashboardService(): DashboardService {
     }
   }
 
-  const createReleaseCycleChart = (): ChartData => {
-    const { packageStats } = loadData()
+  const createReleaseCycleChart = async (): Promise<ChartData> => {
+    const { packageStats } = await loadData()
     const data = packageStats
       .filter(pkg => Number(pkg['평균 릴리즈 주기(근무일 기준)']) > 0)
       .map(pkg => ({
@@ -105,8 +105,8 @@ export function createDashboardService(): DashboardService {
     }
   }
 
-  const createReleaseTypeChart = (): ChartData => {
-    const { releaseStats } = loadData()
+  const createReleaseTypeChart = async (): Promise<ChartData> => {
+    const { releaseStats } = await loadData()
     const data = releaseStats.map(repo => ({
       name: repo['저장소'],
       prerelease: Number(repo['프리릴리즈 비율(%)']),
@@ -146,8 +146,8 @@ export function createDashboardService(): DashboardService {
     }
   }
 
-  const createMonthlyTrendChart = (): ChartData => {
-    const { rawReleases } = loadData()
+  const createMonthlyTrendChart = async (): Promise<ChartData> => {
+    const { rawReleases } = await loadData()
     const counts: Record<string, number> = {}
     rawReleases.forEach(rel => {
       const date = new Date(rel['발행일시'])
@@ -179,8 +179,8 @@ export function createDashboardService(): DashboardService {
     }
   }
 
-  const createTopAuthorsChart = (): ChartData => {
-    const { rawReleases } = loadData()
+  const createTopAuthorsChart = async (): Promise<ChartData> => {
+    const { rawReleases } = await loadData()
     const counts: Record<string, number> = {}
     rawReleases.forEach(rel => {
       const author = rel['작성자 이름']
@@ -212,13 +212,13 @@ export function createDashboardService(): DashboardService {
 
   return {
     async getCharts() {
-      return [
+      return Promise.all([
         createPackageReleaseChart(),
         createReleaseCycleChart(),
         createReleaseTypeChart(),
         createMonthlyTrendChart(),
         createTopAuthorsChart()
-      ]
+      ])
     },
     async getChartById(id: string) {
       const charts = await this.getCharts()
