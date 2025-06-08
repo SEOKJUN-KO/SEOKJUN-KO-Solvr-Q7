@@ -54,10 +54,12 @@ export function createDashboardService(): DashboardService {
       type: 'bar',
       data: {
         labels: data.map(d => d.name),
-        datasets: [{
-          label: '릴리즈 수',
-          data: data.map(d => d.value)
-        }]
+        datasets: [
+          {
+            label: '릴리즈 수',
+            data: data.map(d => d.value)
+          }
+        ]
       }
     }
   }
@@ -77,10 +79,12 @@ export function createDashboardService(): DashboardService {
       type: 'bar',
       data: {
         labels: data.map(d => d.name),
-        datasets: [{
-          label: '평균 릴리즈 주기 (근무일)',
-          data: data.map(d => d.value)
-        }]
+        datasets: [
+          {
+            label: '평균 릴리즈 주기 (근무일)',
+            data: data.map(d => d.value)
+          }
+        ]
       }
     }
   }
@@ -99,14 +103,70 @@ export function createDashboardService(): DashboardService {
       type: 'pie',
       data: {
         labels: ['프리릴리즈', '주말 릴리즈', '일반 릴리즈'],
-        datasets: [{
-          label: '비율 (%)',
-          data: [
-            data.reduce((sum, repo) => sum + repo.prerelease, 0) / data.length,
-            data.reduce((sum, repo) => sum + repo.weekend, 0) / data.length,
-            100 - (data.reduce((sum, repo) => sum + repo.prerelease + repo.weekend, 0) / data.length)
-          ]
-        }]
+        datasets: [
+          {
+            label: '비율 (%)',
+            data: [
+              data.reduce((sum, repo) => sum + repo.prerelease, 0) / data.length,
+              data.reduce((sum, repo) => sum + repo.weekend, 0) / data.length,
+              100 -
+                data.reduce((sum, repo) => sum + repo.prerelease + repo.weekend, 0) / data.length
+            ]
+          }
+        ]
+      }
+    }
+  }
+
+  const createMonthlyTrendChart = (): ChartData => {
+    const { rawReleases } = loadData()
+    const counts: Record<string, number> = {}
+    rawReleases.forEach(rel => {
+      const date = new Date(rel['발행일시'])
+      if (!isNaN(date.getTime())) {
+        const month = date.toISOString().slice(0, 7)
+        counts[month] = (counts[month] || 0) + 1
+      }
+    })
+    const months = Object.keys(counts).sort()
+    return {
+      id: 'monthly-releases',
+      title: '월별 릴리즈 추세',
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: '릴리즈 수',
+            data: months.map(m => counts[m])
+          }
+        ]
+      }
+    }
+  }
+
+  const createTopAuthorsChart = (): ChartData => {
+    const { rawReleases } = loadData()
+    const counts: Record<string, number> = {}
+    rawReleases.forEach(rel => {
+      const author = rel['작성자 이름']
+      counts[author] = (counts[author] || 0) + 1
+    })
+    const top = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+    return {
+      id: 'top-authors',
+      title: '릴리즈 작성자 TOP 10',
+      type: 'bar',
+      data: {
+        labels: top.map(t => t[0]),
+        datasets: [
+          {
+            label: '릴리즈 수',
+            data: top.map(t => t[1])
+          }
+        ]
       }
     }
   }
@@ -116,7 +176,9 @@ export function createDashboardService(): DashboardService {
       return [
         createPackageReleaseChart(),
         createReleaseCycleChart(),
-        createReleaseTypeChart()
+        createReleaseTypeChart(),
+        createMonthlyTrendChart(),
+        createTopAuthorsChart()
       ]
     },
     async getChartById(id: string) {
@@ -124,4 +186,4 @@ export function createDashboardService(): DashboardService {
       return charts.find(chart => chart.id === id) || null
     }
   }
-} 
+}
