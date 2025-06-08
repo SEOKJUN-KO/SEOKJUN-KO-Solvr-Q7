@@ -2,14 +2,6 @@ import axios from 'axios'
 import { User, CreateUserDto, UpdateUserDto } from '../types/user'
 import type { ApiResponse, ChartData } from '../../../shared/types/dashboard'
 
-// API 응답 타입
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-}
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
 const api = axios.create({
