@@ -84,9 +84,10 @@ pnpm build
 - `PUT /api/users/:id`: 유저 정보 수정
 - `DELETE /api/users/:id`: 유저 삭제
 
-## Change Log
+## CHANGELOG
 
 ### Level 1
-- GitHub 릴리즈 통계 수집 기능 구현
-  - 릴리즈 정보 수집
-  - CSV 파일로 통계 데이터 저장
+- GitHub 릴리즈 통계 분석 기능 개선
+  - 저장소별 통계와 패키지별 통계를 분리하여 분석
+    - release-stats.csv: 저장소 전체 릴리즈 통계
+    - package-stats.csv: 각 패키지별 상세 릴리즈 통계
