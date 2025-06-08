@@ -2,134 +2,7 @@ import { Octokit } from 'octokit';
 import { createObjectCsvWriter } from 'csv-writer';
 import { differenceInDays, isWeekend, parseISO, subDays, subWeeks, subMonths, subYears } from 'date-fns';
 import env from './config/env.js';
-
-interface Release {
-  url: string;
-  assets_url: string;
-  upload_url: string;
-  html_url: string;
-  id: number;
-  author: {
-    login: string;
-    id: number;
-    node_id: string;
-    avatar_url: string;
-    gravatar_id: string | null;
-    url: string;
-    html_url: string;
-    followers_url: string;
-    following_url: string;
-    gists_url: string;
-    starred_url: string;
-    subscriptions_url: string;
-    organizations_url: string;
-    repos_url: string;
-    events_url: string;
-    received_events_url: string;
-    type: string;
-    site_admin: boolean;
-  } | null;
-  node_id: string;
-  tag_name: string;
-  target_commitish: string;
-  name: string | null;
-  draft: boolean;
-  prerelease: boolean;
-  created_at: string;
-  published_at: string | null;
-  assets: Array<{
-    url: string;
-    id: number;
-    node_id: string;
-    name: string;
-    label: string | null;
-    uploader: {
-      login: string;
-      id: number;
-      node_id: string;
-      avatar_url: string;
-      gravatar_id: string | null;
-      url: string;
-      html_url: string;
-      followers_url: string;
-      following_url: string;
-      gists_url: string;
-      starred_url: string;
-      subscriptions_url: string;
-      organizations_url: string;
-      repos_url: string;
-      events_url: string;
-      received_events_url: string;
-      type: string;
-      site_admin: boolean;
-    } | null;
-    content_type: string;
-    state: string;
-    size: number;
-    download_count: number;
-    created_at: string;
-    updated_at: string;
-    browser_download_url: string;
-  }>;
-  tarball_url: string | null;
-  zipball_url: string | null;
-  body?: string | null;
-}
-
-interface ReleaseStats {
-  repository: string;
-  total_releases: number;
-  avgReleaseIntervalDays: number;
-  pre_release_ratio: number;
-  weekend_release_ratio: number;
-  last_day_releases: number;
-  last_week_releases: number;
-  last_month_releases: number;
-  last_year_releases: number;
-  latest_release_date: string;
-  first_release_date: string;
-  release_period_days: number;
-  business_days: number;
-  weekday_releases: number;
-  weekend_releases: number;
-}
-
-interface PackageStats {
-  packageName: string;
-  totalReleases: number;
-  weekdayReleases: number;
-  weekendReleases: number;
-  weekendReleaseRatio: number;
-  latestVersion: string;
-  firstReleaseDate: string;
-  latestReleaseDate: string;
-  releasePeriodDays: number;
-  businessDays: number;
-  avgReleaseIntervalDays: number;
-  prereleaseRatio: number;
-  lastDayReleases: number;
-  lastWeekReleases: number;
-  lastMonthReleases: number;
-  lastYearReleases: number;
-}
-
-interface RawRelease {
-  repository: string;
-  release_id: number;
-  release_tag: string;
-  release_name: string | null;
-  release_notes: string | null | undefined;
-  release_url: string;
-  is_draft: boolean;
-  is_prerelease: boolean;
-  created_at: string;
-  published_at: string | null;
-  author_name: string | null;
-  author_url: string | null;
-  target_branch: string;
-  download_count: number;
-  asset_count: number;
-}
+import { Release, ReleaseStats, PackageStats, RawRelease } from './types/github.js';
 
 const octokit = new Octokit({
   auth: env.GITHUB_TOKEN
@@ -283,14 +156,14 @@ async function generateStats() {
       release_id: release.id,
       release_tag: release.tag_name,
       release_name: release.name,
-      release_notes: release.body,
+      release_notes: release.body || null,
       release_url: release.html_url,
       is_draft: release.draft,
       is_prerelease: release.prerelease,
       created_at: release.created_at,
       published_at: release.published_at,
-      author_name: release.author?.login ?? null,
-      author_url: release.author?.html_url ?? null,
+      author_name: release.author?.login || null,
+      author_url: release.author?.html_url || null,
       target_branch: release.target_commitish,
       download_count: release.assets.reduce((sum, asset) => sum + asset.download_count, 0),
       asset_count: release.assets.length
