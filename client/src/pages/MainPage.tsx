@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-type ChartMeta = {
-  id: string
-  title: string
+const chartTypeStyle = {
+  bar: 'from-blue-400 to-cyan-400',
+  line: 'from-pink-400 to-fuchsia-400',
+  pie: 'from-yellow-400 to-orange-400',
+  default: 'from-gray-300 to-gray-400'
+}
+
+const chartTypeIcon = {
+  bar: '📊',
+  line: '📈',
+  pie: '🥧',
+  default: '📦'
 }
 
 export default function MainPage() {
-  const [charts, setCharts] = useState<ChartMeta[]>([])
+  const [charts, setCharts] = useState<Array<{id: string, title: string, type: 'bar' | 'line' | 'pie' | string}>>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -17,22 +26,30 @@ export default function MainPage() {
   }, [])
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">대시보드</h1>
-      <p className="text-neutral-600">
-        Github 릴리즈 데이터를 분석하여 팀의 개발 활동을 모니터링하는 도구예요 📊 단순히 데이터를
-        모으는 것을 넘어서, 의미있는 통계 정보를 도출하는 게 목표입니다.
-      </p>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {charts.map(chart => (
-          <div
-            key={chart.id}
-            className="card cursor-pointer hover:shadow-lg"
-            onClick={() => navigate(`/charts/${chart.id}`)}
-          >
-            <h2 className="font-semibold">{chart.title}</h2>
-          </div>
-        ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-pink-500 text-center drop-shadow mb-2 animate-fade-in">
+          대시보드 차트
+        </h1>
+        <p className="text-xl text-gray-500 text-center mb-12">패키지 릴리즈 통계를 다양한 차트로 확인해보세요</p>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {charts.map(chart => (
+            <div
+              key={chart.id}
+              onClick={() => navigate(`/charts/${chart.id}`)}
+              className={`group cursor-pointer rounded-2xl shadow-xl bg-white hover:scale-105 transition-transform duration-300 border-2 border-transparent hover:border-indigo-400`}
+            >
+              <div className={`h-32 flex items-center justify-center rounded-t-2xl bg-gradient-to-r ${(chartTypeStyle as any)[chart.type] || chartTypeStyle.default}`}>
+                <span className="text-5xl drop-shadow">{(chartTypeIcon as any)[chart.type] || chartTypeIcon.default}</span>
+              </div>
+              <div className="p-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition">{chart.title}</h3>
+                <p className="text-sm text-gray-500 mb-4">{chart.type === 'bar' ? '막대 차트' : chart.type === 'line' ? '선 차트' : chart.type === 'pie' ? '파이 차트' : ''}</p>
+                <span className="inline-block text-indigo-500 font-semibold group-hover:underline">차트 보기 →</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
