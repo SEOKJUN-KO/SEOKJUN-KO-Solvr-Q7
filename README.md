@@ -1,4 +1,4 @@
-# 풀스택 서비스 보일러 플레이트
+# Release Tracker
 
 ## 프로젝트 개요
 
@@ -83,3 +83,10 @@ pnpm build
 - `POST /api/users`: 새 유저 추가
 - `PUT /api/users/:id`: 유저 정보 수정
 - `DELETE /api/users/:id`: 유저 삭제
+
+## Change Log
+
+### Level 1
+- GitHub 릴리즈 통계 수집 기능 구현
+  - 릴리즈 정보 수집
+  - CSV 파일로 통계 데이터 저장
