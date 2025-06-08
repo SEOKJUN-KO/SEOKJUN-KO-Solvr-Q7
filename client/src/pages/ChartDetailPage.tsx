@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import ChartView from '../components/ChartView'
+import { dashboardService } from '../services/api'
+import { useLoading } from '../contexts/LoadingContext'
+import type { ChartData } from '../../../shared/types/dashboard'
 
 const chartTypeIcon = {
   bar: '📊',
@@ -12,13 +15,44 @@ const chartTypeIcon = {
 export default function ChartDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [chart, setChart] = useState<any>(null)
+  const [chart, setChart] = useState<ChartData | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const { startLoading, stopLoading } = useLoading()
+
+  const fetchChart = useCallback(async () => {
+    if (!id) return
+    
+    try {
+      startLoading()
+      const data = await dashboardService.getChartById(id)
+      setChart(data)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '차트 데이터를 불러오는데 실패했습니다.')
+    } finally {
+      stopLoading()
+    }
+  }, [id, startLoading, stopLoading])
 
   useEffect(() => {
-    fetch(`/api/dashboard/charts/${id}`)
-      .then(res => res.json())
-      .then(data => setChart(data.data))
-  }, [id])
+    fetchChart()
+  }, [fetchChart])
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+          <p>{error}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-4 text-red-600 hover:text-red-800 underline"
+          >
+            메인으로 돌아가기
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (!chart) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { User, CreateUserDto, UpdateUserDto } from '../types/user'
+import type { ApiResponse, ChartData } from '../../../shared/types/dashboard'
 
 // API 응답 타입
 interface ApiResponse<T = any> {
@@ -50,6 +51,27 @@ export const userService = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/users/${id}`)
+  }
+}
+
+export const dashboardService = {
+  getCharts: async (): Promise<ChartData[]> => {
+    const response = await api.get<ApiResponse<ChartData[]>>('/dashboard/charts')
+    if (!response.data.success) {
+      throw new Error(response.data.error || '차트 데이터를 가져오는데 실패했습니다.')
+    }
+    return response.data.data || []
+  },
+
+  getChartById: async (id: string): Promise<ChartData> => {
+    const response = await api.get<ApiResponse<ChartData>>(`/dashboard/charts/${id}`)
+    if (!response.data.success) {
+      throw new Error(response.data.error || '차트 데이터를 가져오는데 실패했습니다.')
+    }
+    if (!response.data.data) {
+      throw new Error('차트를 찾을 수 없습니다.')
+    }
+    return response.data.data
   }
 }
 

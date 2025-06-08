@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { dashboardService } from '../services/api'
+import { useLoading } from '../contexts/LoadingContext'
+import type { ChartData } from '../../../shared/types/dashboard'
 
 const chartTypeStyle = {
   bar: 'from-blue-400 to-cyan-400',
@@ -16,14 +19,37 @@ const chartTypeIcon = {
 }
 
 export default function MainPage() {
-  const [charts, setCharts] = useState<Array<{id: string, title: string, type: 'bar' | 'line' | 'pie' | string}>>([])
+  const [charts, setCharts] = useState<ChartData[]>([])
+  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { startLoading, stopLoading } = useLoading()
+
+  const fetchCharts = useCallback(async () => {
+    try {
+      startLoading()
+      const data = await dashboardService.getCharts()
+      setCharts(data)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '차트 데이터를 불러오는데 실패했습니다.')
+    } finally {
+      stopLoading()
+    }
+  }, [startLoading, stopLoading])
 
   useEffect(() => {
-    fetch('/api/dashboard/charts')
-      .then(res => res.json())
-      .then(data => setCharts(data.data))
-  }, [])
+    fetchCharts()
+  }, [fetchCharts])
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+          <p>{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4">
